@@ -160,8 +160,8 @@ def save_output(data, fmt, path):
 
 def main():
     p = argparse.ArgumentParser(description="Notes → Flashcards with Gemini")
-    p.add_argument("-o","--output",
-                   choices=["csv","json","xlsx","tsv","md","txt","apkg"],
+    p.add_argument("-o", "--output",
+                   choices=["csv", "json", "xlsx", "tsv", "md", "txt", "apkg"],
                    default="csv", help="Export format")
     p.add_argument("input_file", nargs="?", help="Path to .txt/.pdf/.docx notes")
     args = p.parse_args()
@@ -173,13 +173,23 @@ def main():
         print("❌ Set GOOGLE_APPLICATION_CREDENTIALS to your service-account JSON.")
         exit(1)
 
+    # Step 1: Load notes
     notes = load_text(args.input_file)
-    llm  = VertexAI(model_name="gemini-2.5-flash", temperature=0.3)
+
+    # Step 2: Generate flashcards
     cards = generate_flashcards(notes, llm)
 
-    out = f"output_flashcards.{args.output}"
-    print(f"💾 Saving → {out}")
-    save_output(cards, args.output, out)
+    # Step 3: Create output directory if it doesn't exist
+    output_dir = "output_files"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Step 4: Generate output path
+    base_name = os.path.splitext(os.path.basename(args.input_file))[0]
+    out_path = os.path.join(output_dir, f"{base_name}_flashcards.{args.output}")
+
+    # Step 5: Save file
+    print(f"💾 Saving → {out_path}")
+    save_output(cards, args.output, out_path)
     print("✅ Done!")
 
 
