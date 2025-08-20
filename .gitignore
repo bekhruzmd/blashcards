@@ -1,5 +1,32 @@
-.env
+# Credentials
+service_account.json
 *.json
+
+# Generated files
+quiz_attempts/
+output_files/
 __pycache__/
 *.pyc
-.venv/
+*.pyo
+
+# Environment
+.env
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp

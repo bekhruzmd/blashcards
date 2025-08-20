@@ -1,4 +1,4 @@
-# 🧠 Smart Flashcards - AI-Powered Learning System
+# 🧠 Blashcards - AI-Powered Learning System
 
 Transform your study materials into intelligent flashcards with AI-powered generation, grading, and explanations. Study smarter, not harder.
 
@@ -18,8 +18,9 @@ Transform your study materials into intelligent flashcards with AI-powered gener
 ### 📚 **Interactive Quiz Experience**
 - Beautiful command-line interface with Rich formatting
 - Real-time AI grading with instant feedback
-- Optional AI explanations for wrong answers
+- AI explanations enabled by default for wrong answers
 - Progress tracking and performance analytics
+- Early exit with proper results and attempt saving
 
 ### 📊 **Multiple Export Formats**
 - **CSV** - For Excel/Google Sheets
@@ -31,10 +32,11 @@ Transform your study materials into intelligent flashcards with AI-powered gener
 - **TSV** - Tab-separated values
 
 ### 📈 **Performance Analytics**
-- Track quiz performance over time
+- Organized quiz attempts in dedicated directory
+- Session-based tracking with timestamped files
 - Success rate and average score calculations
-- Recent attempts history
-- Learning progress insights
+- Review individual sessions or all-time performance
+- Learning progress insights over time
 
 ## 🚀 Quick Start
 
@@ -47,39 +49,34 @@ Transform your study materials into intelligent flashcards with AI-powered gener
 ### Installation
 
 ```bash
-# Clone or download the repository
-git clone <your-repo-url>
-cd smart-flashcards
+# Clone the repository
+git clone https://github.com/yourusername/blashcards.git
+cd blashcards
 
 # Install required packages
-pip install typer rich google-cloud-aiplatform langchain-google-vertexai
-pip install pdfplumber PyPDF2 python-docx pandas openpyxl
-pip install genanki  # Optional: for Anki export
-
-# Set up Google Cloud credentials
-export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/service_account.json"
+pip install -r requirements.txt
 ```
 
 ### Basic Usage
 
 **1. Generate flashcards from study material:**
 ```bash
-python generator.py make your_notes.pdf
-python generator.py make study_guide.docx --format csv
-python generator.py make lecture_notes.txt --format xlsx
+python main.py make your_notes.pdf
+python main.py make study_guide.docx --format csv
+python main.py make lecture_notes.txt --format xlsx
 ```
 
-**2. Take an interactive quiz:**
+**2. Take an interactive quiz (AI explanations ON by default):**
 ```bash
-python generator.py quiz
-python generator.py quiz --explain --limit 10
-python generator.py quiz --cards-file my_cards.json
+python main.py quiz
+python main.py quiz --limit 10
+python main.py quiz --cards-file output_files/my_cards.json
 ```
 
 **3. Review your performance:**
 ```bash
-python generator.py review
-python generator.py review --file quiz_attempts.jsonl
+python main.py review
+python main.py review --file quiz_session_20241220_143052.jsonl
 ```
 
 ## 📖 Detailed Usage
@@ -88,22 +85,22 @@ python generator.py review --file quiz_attempts.jsonl
 
 ```bash
 # Basic generation (saves as JSON)
-python generator.py make notes.pdf
+python main.py make notes.pdf
 
 # Specify output format
-python generator.py make notes.pdf --format csv
-python generator.py make notes.pdf --format xlsx
-python generator.py make notes.pdf --format md
+python main.py make notes.pdf --format csv
+python main.py make notes.pdf --format xlsx
+python main.py make notes.pdf --format md
 
 # Custom output directory
-python generator.py make notes.pdf --format csv --output-dir my_flashcards
+python main.py make notes.pdf --format csv --output-dir my_flashcards
 
 # Create Anki deck for spaced repetition
-python generator.py make notes.pdf --format apkg
+python main.py make notes.pdf --format apkg
 ```
 
 **Supported Input Formats:**
-- `.pdf` - PDF documents
+- `.pdf` - PDF documents (with fallback readers)
 - `.docx` - Microsoft Word documents  
 - `.txt` - Plain text files
 
@@ -113,60 +110,65 @@ Files are saved as: `output_files/[filename]_flashcards.[format]`
 ### Interactive Quiz
 
 ```bash
-# Basic quiz with all cards
-python generator.py quiz
+# Basic quiz with AI explanations (default ON)
+python main.py quiz
 
-# Quiz with AI explanations for wrong answers
-python generator.py quiz --explain
+# Turn OFF AI explanations
+python main.py quiz --no-explain
 
 # Limited number of cards
-python generator.py quiz --limit 20
+python main.py quiz --limit 20
 
 # Use specific flashcard file
-python generator.py quiz --cards-file custom_cards.json
+python main.py quiz --cards-file output_files/custom_cards.json
 
 # Don't shuffle cards
-python generator.py quiz --no-shuffle
+python main.py quiz --no-shuffle
 ```
 
 **Quiz Features:**
-- Type `quit` to exit early
+- Type `quit` to exit early (saves progress and shows results)
 - Type `skip` to skip a question
 - Get instant AI feedback on answers
-- Optional detailed explanations for mistakes
+- AI explanations enabled by default for deeper learning
+- Progress saved even when quitting mid-session
 
 ### Performance Review
 
 ```bash
-# Review default attempts file
-python generator.py review
+# Review all quiz sessions
+python main.py review
 
-# Review specific attempts file
-python generator.py review --file old_attempts.jsonl
+# Review specific session
+python main.py review --file quiz_session_20241220_143052.jsonl
+
+# Use custom quiz directory
+python main.py review --dir my_quiz_data
 ```
 
 **Analytics Include:**
-- Total attempts and success rate
-- Average score across all attempts
-- Recent attempts with scores
-- Performance trends over time
+- Total attempts across all sessions
+- Average score and success rate
+- Recent attempts with detailed breakdown
+- Session-specific or combined analysis
 
 ## 🛠️ Configuration
 
 ### Google Cloud Setup
 
-1. **Create a Google Cloud Project**
-2. **Enable Vertex AI API**
-3. **Create a Service Account** with Vertex AI permissions
-4. **Download the JSON key file**
-5. **Set the environment variable:**
+Update `config.py` with your project details:
 
+```python
+# Update these values in config.py
+project_id = "your-project-id"
+service_account_path = "/path/to/your/service_account.json"
+```
+
+Or use environment variables:
 ```bash
 # Linux/Mac
 export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service_account.json"
-
-# Windows
-set GOOGLE_APPLICATION_CREDENTIALS="C:\path\to\service_account.json"
+export GOOGLE_CLOUD_PROJECT="your-project-id"
 ```
 
 ### AI Model Settings
@@ -175,15 +177,28 @@ The system uses Google's Gemini 2.5 Flash model with optimized settings:
 - **Generation**: Temperature 0.3 for creative but consistent flashcards
 - **Grading**: Temperature 0.1 for reliable, consistent scoring
 
-## 📁 File Structure
+## 📁 Project Structure
 
 ```
-smart-flashcards/
-├── generator.py              # Main application
-├── output_files/            # Generated flashcards (created automatically)
-├── quiz_attempts.jsonl      # Quiz performance log
-├── service_account.json     # Google Cloud credentials (you provide)
-└── README.md               # This file
+blashcards/
+├── main.py                  # CLI interface and commands
+├── models.py               # Data classes (Verdict, Attempt)
+├── config.py               # Google Cloud setup and LLM config
+├── ai_judge.py             # Intelligent grading system
+├── ai_explainer.py         # AI tutoring explanations
+├── file_readers.py         # Multi-format file loading
+├── flashcard_gen.py        # AI flashcard generation
+├── exporters.py            # Export functions for all formats
+├── quiz_logger.py          # Quiz attempt logging
+├── utils.py                # JSON parsing utilities
+├── requirements.txt        # Python dependencies
+├── README.md              # This documentation
+├── output_files/          # Generated flashcards (auto-created)
+├── quiz_attempts/         # Quiz session logs (auto-created)
+│   ├── quiz_session_20241220_090000.jsonl
+│   ├── quiz_session_20241220_143052.jsonl
+│   └── quiz_session_20241220_200130.jsonl
+└── service_account.json   # Your Google Cloud credentials
 ```
 
 ## 🎨 Example Outputs
@@ -225,42 +240,46 @@ The system uses an intelligent grading approach that:
 
 ## 📊 Performance Tracking
 
-All quiz attempts are logged to `quiz_attempts.jsonl` including:
-- Question and correct answer
-- Your answer and AI verdict
-- Score and detailed feedback
-- Timestamp for progress tracking
+### Session-Based Logging
+- Each quiz creates a new timestamped file: `quiz_session_YYYYMMDD_HHMMSS.jsonl`
+- Organized in dedicated `quiz_attempts/` directory
+- Tracks questions, answers, verdicts, and timestamps
+- Progress saved even when quitting early
 
-Use `python generator.py review` to analyze your learning patterns and identify areas for improvement.
+### Review Analytics
+- **Individual sessions**: Focus on specific study periods
+- **Combined analysis**: Overall learning progress
+- **Performance metrics**: Success rates, average scores, improvement trends
 
 ## 🔧 Troubleshooting
 
 ### Common Issues
 
-**"Package not found" error:**
-- Ensure file path is correct
-- Use full file path if file is in different directory
-- Check file isn't corrupted by opening in Word/PDF viewer
+**"Cards file not found" error:**
+- Check file path: files are saved in `output_files/` by default
+- Generate cards first: `python main.py make your_notes.pdf`
+- Use correct file extension (usually `.json`)
 
 **"Invalid JSON from AI" error:**
-- Usually resolves automatically with retry logic
-- Check internet connection
-- Verify Google Cloud credentials are valid
+- Built-in retry logic handles most cases automatically
+- Check internet connection and Google Cloud credentials
+- Verify your service account has Vertex AI permissions
 
 **"GOOGLE_APPLICATION_CREDENTIALS not set":**
-- Set environment variable to your service account JSON file
-- Ensure the file path is correct and accessible
+- Update the path in `config.py`
+- Or set environment variable to your service account JSON file
+- Ensure the file path exists and is accessible
 
 ### Getting Help
 
 ```bash
 # See all available commands
-python generator.py --help
+python main.py --help
 
 # Get help for specific commands
-python generator.py make --help
-python generator.py quiz --help
-python generator.py review --help
+python main.py make --help
+python main.py quiz --help
+python main.py review --help
 ```
 
 ## 🚀 Advanced Usage
@@ -269,21 +288,33 @@ python generator.py review --help
 ```bash
 # Process multiple files
 for file in *.pdf; do
-    python generator.py make "$file" --format csv
+    python main.py make "$file" --format csv
 done
 ```
 
 ### Custom Study Sessions
 ```bash
-# Create focused study sessions
-python generator.py quiz --limit 5 --explain  # Short session with explanations
-python generator.py quiz --no-shuffle --limit 10  # Sequential review
+# Quick focused session
+python main.py quiz --limit 5
+
+# Turn off explanations for speed
+python main.py quiz --no-explain --limit 10
+
+# Sequential review (no shuffle)
+python main.py quiz --no-shuffle --limit 15
 ```
 
-### Integration with Study Tools
-- Export as **APKG** for Anki spaced repetition
-- Export as **CSV** for Excel analysis
-- Export as **Markdown** for documentation
+### Session Management
+```bash
+# Review today's morning session
+python main.py review --file quiz_session_20241220_090000.jsonl
+
+# Analyze all-time performance
+python main.py review
+
+# Use custom quiz directory
+python main.py review --dir backup_attempts
+```
 
 ## 🎯 Tips for Best Results
 
@@ -293,14 +324,42 @@ python generator.py quiz --no-shuffle --limit 10  # Sequential review
 - Remove unnecessary formatting that might confuse the AI
 
 ### Quiz Strategy
-- Enable explanations (`--explain`) when learning new material
+- Keep AI explanations ON (default) when learning new material
 - Use limited sessions (`--limit 10`) for focused practice
-- Review performance regularly to identify weak areas
+- Review individual sessions to track topic-specific progress
+- Quit early if needed - your progress is always saved
 
 ### Export Formats
 - **Anki (APKG)**: Best for long-term retention and spaced repetition
 - **CSV/Excel**: Great for sharing with study groups
 - **Markdown**: Perfect for creating study guides
+- **JSON**: Default format that works seamlessly with the quiz system
+
+## 🏗️ Modular Architecture
+
+The codebase is organized into focused modules:
+
+- **`main.py`**: CLI interface and user interaction
+- **`ai_judge.py`**: Intelligent answer grading
+- **`ai_explainer.py`**: Mistake explanations and tutoring
+- **`flashcard_gen.py`**: AI-powered flashcard generation
+- **`file_readers.py`**: Multi-format document processing
+- **`exporters.py`**: Export to various formats
+- **`models.py`**: Data structures and types
+
+This makes the system easy to extend, test, and maintain.
+
+## 📝 Dependencies
+
+Core requirements (install with `pip install -r requirements.txt`):
+- `typer` - CLI framework
+- `rich` - Beautiful terminal output
+- `google-cloud-aiplatform` - Vertex AI integration
+- `langchain-google-vertexai` - LLM interface
+- `pandas` - Data processing
+- `pdfplumber`, `PyPDF2` - PDF reading
+- `python-docx` - Word document processing
+- `genanki` - Anki export (optional)
 
 ## 📝 License
 
